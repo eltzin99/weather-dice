@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>날씨 이야기 주사위 앱</title>
+    <!-- Tailwind CSS 로딩 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .dice-3d {
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+        .rolling {
+            animation: shake 0.6s ease-in-out infinite;
+        }
+        @keyframes shake {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-10deg) scale(1.05); }
+            50% { transform: rotate(10deg) scale(0.95); }
+            75% { transform: rotate(-5deg) scale(1.02); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-50 via-indigo-50 to-amber-50 min-h-screen text-gray-800">
+
+    <div id="app" class="max-w-4xl mx-auto px-4 py-8">
+        
+        <!-- 상단 헤더 -->
+        <header class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-white/40 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md shadow-sky-200">
+                    🎲
+                </div>
+                <div>
+                    <h1 class="text-2xl font-ext500 font-bold text-gray-900">날씨 이야기 주사위 놀이</h1>
+                    <p class="text-sm text-gray-500">주사위를 굴려 낱말을 뽑고 재미있는 이야기를 만들어봐요!</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button id="navStudentBtn" onclick="switchTab('student')" class="px-4 py-2 rounded-xl font-semibold text-sm transition-all bg-sky-500 text-white shadow-md shadow-sky-100">
+                    학생 놀이 공간
+                </button>
+                <button id="navAdminBtn" onclick="switchTab('admin')" class="px-4 py-2 rounded-xl font-semibold text-sm transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
+                    관리자 대시보드 🔒
+                </button>
+            </div>
+        </header>
+
+        <main id="studentView" class="space-y-8">
+            
+            <!-- 작성자 입력 카드 -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-sky-100">
+                <label for="authorName" class="block text-sm font-semibold text-gray-700 mb-2">이름 또는 모둠명 입력</label>
+                <input type="text" id="authorName" placeholder="예: 3모둠 슬기, 김철수 등" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium">
+            </div>
+
+            <!-- 주사위 존 -->
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-sky-100 text-center">
+                <h2 class="text-lg font-bold text-gray-800 mb-2">3개의 주사위를 동시에 굴려보세요!</h2>
+                <p class="text-sm text-gray-500 mb-6">(날씨 주사위 + 생활용품 주사위 + 상황 주사위)</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- 날씨 주사위 -->
+                    <div class="bg-sky-50 border-2 border-dashed border-sky-200 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[160px]">
+                        <span class="text-xs font-bold text-sky-600 tracking-wider uppercase mb-2">1. 날씨 주사위</span>
+                        <div id="diceWeather" class="text-2xl font-bold text-sky-900 bg-white px-6 py-4 rounded-xl shadow-sm border border-sky-100 w-full text-center">
+                            ?
+                        </div>
+                    </div>
+                    <!-- 생활용품 주사위 -->
+                    <div class="bg-emerald-50 border-2 border-dashed border-emerald-200 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[160px]">
+                        <span class="text-xs font-bold text-emerald-600 tracking-wider uppercase mb-2">2. 생활용품 주사위</span>
+                        <div id="diceItem" class="text-2xl font-bold text-emerald-900 bg-white px-6 py-4 rounded-xl shadow-sm border border-emerald-100 w-full text-center">
+                            ?
+                        </div>
+                    </div>
+                    <!-- 상황 주사위 -->
+                    <div class="bg-amber-50 border-2 border-dashed border-amber-200 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[160px]">
+                        <span class="text-xs font-bold text-amber-600 tracking-wider uppercase mb-2">3. 상황 주사위</span>
+                        <div id="diceSituation" class="text-2xl font-bold text-amber-900 bg-white px-6 py-4 rounded-xl shadow-sm border border-amber-100 w-full text-center">
+                            ?
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="rollDice()" id="rollBtn" class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-sky-200 hover:opacity-95 transition-all text-lg cursor-pointer">
+                    🎲 주사위 굴리기!
+                </button>
+            </div>
+
+            <!-- 이야기 작성 존 -->
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-sky-100">
+                <h2 class="text-lg font-bold text-gray-800 mb-2">나만의 날씨 이야기 만들기</h2>
+                <p class="text-sm text-gray-500 mb-4">주사위로 나온 3개의 낱말을 모두 포함하여 이야기를 작성해 보세요.</p>
+                
+                <textarea id="storyContent" rows="5" placeholder="예: 등교할 때는 비가 와서 우산을 챙겼는데, 하교할 때는 무더워서 힘들었다..." class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium mb-4 resize-none"></textarea>
+                
+                <div class="flex justify-end">
+                    <button onclick="submitStory()" class="px-6 py-3 bg-emerald-500 text-white font-bold rounded-2xl shadow-md shadow-emerald-100 hover:bg-emerald-600 transition-all cursor-pointer">
+                        ✨ 이야기 제출하기
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <main id="adminView" class="hidden space-y-6">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">관리자 대시보드</h2>
+                    <p class="text-sm text-gray-500">학생들이 작성한 날씨 이야기와 사용된 주사위 기록을 모아봅니다.</p>
+                </div>
+                <button onclick="loadStories()" class="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-xl text-sm hover:bg-gray-200 transition-all">
+                    🔄 새로고침
+                </button>
+            </div>
+
+            <!-- 이야기 목록 카드 컨테이너 -->
+            <div id="storyListContainer" class="grid grid-cols-1 gap-4">
+                <!-- 동적 렌더링 영역 -->
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        // 주사위 데이터 풀
+        const weatherWords = ["비 🌧️", "눈 ❄️", "바람 💨", "무더위 ☀️", "쌀쌀함 🍃", "소나기 🌦️"];
+        const itemWords = ["우산 ☂️", "외투 🧥", "장화 🥾", "선글라스 🕶️", "모자 🧢", "운동화 👟"];
+        const situationWords = ["등교할 때", "하교할 때", "운동장 수업", "캠핑장 텐트", "소풍 가는 날", "쉬는 시간"];
+
+        let currentRoll = {
+            weather: "",
+            item: "",
+            situation: ""
+        };
+
+        // 탭 전환 기능
+        function switchTab(tab) {
+            const studentBtn = document.getElementById('navStudentBtn');
+            const adminBtn = document.getElementById('navAdminBtn');
+            const studentView = document.getElementById('studentView');
+            const adminView = document.getElementById('adminView');
+
+            if (tab === 'student') {
+                studentBtn.className = "px-4 py-2 rounded-xl font-semibold text-sm transition-all bg-sky-500 text-white shadow-md shadow-sky-100";
+                adminBtn.className = "px-4 py-2 rounded-xl font-semibold text-sm transition-all bg-gray-100 text-gray-600 hover:bg-gray-200";
+                studentView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+            } else {
+                adminBtn.className = "px-4 py-2 rounded-xl font-semibold text-sm transition-all bg-indigo-600 text-white shadow-md shadow-indigo-100";
+                studentBtn.className = "px-4 py-2 rounded-xl font-semibold text-sm transition-all bg-gray-100 text-gray-600 hover:bg-gray-200";
+                adminView.classList.remove('hidden');
+                studentView.classList.add('hidden');
+                loadStories();
+            }
+        }
+
+        // 주사위 굴리기 효과 및 로직
+        function rollDice() {
+            const wEl = document.getElementById('diceWeather');
+            const iEl = document.getElementById('diceItem');
+            const sEl = document.getElementById('diceSituation');
+            const rollBtn = document.getElementById('rollBtn');
+
+            rollBtn.disabled = true;
+            wEl.classList.add('rolling');
+            iEl.classList.add('rolling');
+            sEl.classList.add('rolling');
+
+            setTimeout(() => {
+                currentRoll.weather = weatherWords[Math.floor(Math.random() * weatherWords.length)];
+                currentRoll.item = itemWords[Math.floor(Math.random() * itemWords.length)];
+                currentRoll.situation = situationWords[Math.floor(Math.random() * situationWords.length)];
+
+                wEl.innerText = currentRoll.weather;
+                iEl.innerText = currentRoll.item;
+                sEl.innerText = currentRoll.situation;
+
+                wEl.classList.remove('rolling');
+                iEl.classList.remove('rolling');
+                sEl.classList.remove('rolling');
+                rollBtn.disabled = false;
+            }, 600);
+        }
+
+        // 이야기 제출하기
+        function submitStory() {
+            const author = document.getElementById('authorName').value.trim();
+            const story = document.getElementById('storyContent').value.trim();
+
+            if (!author) {
+                alertBox("이름 또는 모둠명을 입력해 주세요!");
+                return;
+            }
+            if (!currentRoll.weather) {
+                alertBox("먼저 주사위를 굴려 낱말을 뽑아주세요!");
+                return;
+            }
+            if (!story) {
+                alertBox("만든 이야기를 작성해 주세요!");
+                return;
+            }
+
+            const newEntry = {
+                id: Date.now(),
+                author: author,
+                weather: currentRoll.weather,
+                item: currentRoll.item,
+                situation: currentRoll.situation,
+                story: story,
+                date: new Date().toLocaleString()
+            };
+
+            // LocalStorage를 활용한 데이터 저장 (새로고침해도 관리자가 볼 수 있게 유지)
+            let stories = JSON.parse(localStorage.getItem('weatherStories') || '[]');
+            stories.unshift(newEntry);
+            localStorage.setItem('weatherStories', JSON.stringify(stories));
+
+            alertBox("🎉 이야기가 성공적으로 제출되었습니다! 관리자 대시보드에서 확인해보세요.");
+            
+            // 입력창 초기화
+            document.getElementById('storyContent').value = '';
+        }
+
+        // 관리자 대시보드 목록 불러오기
+        function loadStories() {
+            const container = document.getElementById('storyListContainer');
+            const stories = JSON.parse(localStorage.getItem('weatherStories') || '[]');
+
+            if (stories.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-12 text-center text-gray-400 border border-gray-100">
+                        <p class="text-lg">아직 제출된 날씨 이야기가 없습니다.</p>
+                        <p class="text-sm mt-1">학생 놀이 공간에서 주사위를 굴리고 이야기를 등록해 보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            stories.forEach((item) => {
+                html += `
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="space-y-2 flex-1">
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 bg-sky-100 text-sky-700 font-bold rounded-xl text-sm">👤 ${escapeHtml(item.author)}</span>
+                                <span class="text-xs text-gray-400">${item.date}</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2 text-xs font-semibold">
+                                <span class="px-2.5 py-1 bg-sky-50 text-sky-800 rounded-lg">날씨: ${escapeHtml(item.weather)}</span>
+                                <span class="px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-lg">생활용품: ${escapeHtml(item.item)}</span>
+                                <span class="px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg">상황: ${escapeHtml(item.situation)}</span>
+                            </div>
+                            <p class="text-gray-700 bg-gray-50 p-4 rounded-2xl text-sm font-medium mt-2">"${escapeHtml(item.story)}"</p>
+                        </div>
+                        <button onclick="deleteStory(${item.id})" class="text-red-400 hover:text-red-600 text-sm font-semibold p-2 rounded-xl hover:bg-red-50 transition-all self-end md:self-center">
+                            삭제
+                        </button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // 개별 항목 삭제 기능
+        function deleteStory(id) {
+            if (confirm("정말 이 이야기를 삭제하시겠습니까?")) {
+                let stories = JSON.parse(localStorage.getItem('weatherStories') || '[]');
+                stories = stories.filter(s => s.id !== id);
+                localStorage.setItem('weatherStories', JSON.stringify(stories));
+                loadStories();
+            }
+        }
+
+        // 커스텀 알럿 박스 대체 함수 (규칙 준수)
+        function alertBox(message) {
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50";
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-xl animate-in fade-in zoom-in duration-200">
+                    <p class="text-gray-800 font-semibold text-base">${message}</p>
+                    <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-sky-500 text-white font-bold rounded-xl shadow-md hover:bg-sky-600 transition-all">
+                        확인
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // XSS 방지 헬퍼
+        function escapeHtml(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
